@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Стрессер</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            margin-top: 10px;
+            display: block;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #output {
+            margin-top: 20px;
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Стрессер</h1>
+        <label for="targetURL">Target URL:</label>
+        <input type="text" id="targetURL" placeholder="Введите URL" required>
+
+        <label for="attackTime">Attack Time (seconds):</label>
+        <input type="number" id="attackTime" placeholder="Введите время в секундах" required>
+
+        <button id="startButton">Запустить атаку</button>
+        <button id="stopButton">Остановить атаку</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        document.getElementById('startButton').addEventListener('click', function() {
+            const targetURL = document.getElementById('targetURL').value;
+            const attackTime = document.getElementById('attackTime').value;
+            const outputDiv = document.getElementById('output');
+
+            // Формируем данные для отправки
+            const data = {
+                targetURL: targetURL,
+                attackTime: attackTime
+            };
+
+            // Отправляем POST-запрос на сервер
+            fetch('/attack', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputDiv.innerHTML += `Ответ от сервера: ${data.message}<br>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
+            })
+            .catch(error => {
+                outputDiv.innerHTML += `Ошибка: ${error}<br>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
+            });
+        });
+        document.getElementById('stopButton').addEventListener('click', function() {
+            const outputDiv = document.getElementById('output');
+            fetch('/stop', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                outputDiv.innerHTML += `Ответ от сервера: ${data.message}<br>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
+            })
+            .catch(error => {
+                outputDiv.innerHTML += `Ошибка: ${error}<br>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
+            });
+        })
+    </script>
+</body>
+</html>
