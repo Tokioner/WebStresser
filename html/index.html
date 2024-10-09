@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стрессер</title>
+    <title>Залупа стрессер</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,41 +47,64 @@
         button:hover {
             background-color: #218838;
         }
-        #output {
+        textarea {
+            resize: none;
             margin-top: 20px;
             height: 150px;
+            width: 100%;
             overflow-y: auto;
             border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 10px;
+            padding: 5%,0,0,5%;
             background: #f9f9f9;
+        }
+        #consoleOutput {
+            height: 500px;
+        }
+        #clearButton {
+            background-color: red;
+            color: orange;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Стрессер</h1>
-        <label for="targetURL">Target URL:</label>
-        <input type="text" id="targetURL" placeholder="Введите URL" required>
+        <h1>Залупа Стрессер</h1>
+		<h1>8=====D</h1>
+        <label for="targetURL">Схватить URL за яйца:</label>
+        <input type="text" id="targetURL" placeholder="Схватить URL за яйца!" required>
 
-        <label for="attackTime">Attack Time (seconds):</label>
-        <input type="number" id="attackTime" placeholder="Введите время в секундах" required>
+        <label for="attackTime">Время дрочки:</label>
+        <input type="number" id="attackTime" placeholder="Время дрочки в секундах!" required>
 
-        <button id="startButton">Запустить атаку</button>
-        <button id="stopButton">Остановить атаку</button>
-        <div id="output"></div>
+        <label for="maxSocks">Максимум членов(желательно до 3000):</label>
+        <input type="number" id="maxSocks" placeholder="Макс количество членов" required>
+
+        <label for="RPS">В N рук:</label>
+        <input type="number" id="RPS" placeholder="Сколькими руками!?" required>
+
+        <button id="startButton">ВЫДРОЧИТЬ!</button>
+        <button id="stopButton">КОНЧИТЬ!</button>
+        <textarea id="output"></textarea>
+        <h1>Логи сервера:</h1>
+        <textarea id="consoleOutput" rows="20" cols="80" readonly></textarea>
+        <button id="clearButton">Снести логи нахуй!</button>
     </div>
 
     <script>
         document.getElementById('startButton').addEventListener('click', function() {
             const targetURL = document.getElementById('targetURL').value;
             const attackTime = document.getElementById('attackTime').value;
+            const maxSocks = document.getElementById('maxSocks').value;
+            const RPS = document.getElementById('RPS').value;
             const outputDiv = document.getElementById('output');
 
             // Формируем данные для отправки
             const data = {
                 targetURL: targetURL,
-                attackTime: attackTime
+                attackTime: attackTime,
+                maxSocks: maxSocks,
+                RPS: RPS
             };
 
             // Отправляем POST-запрос на сервер
@@ -94,11 +117,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                outputDiv.innerHTML += `Ответ от сервера: ${data.message}<br>`;
+                //outputDiv.innerHTML += `Ответ от дрочильни: ${data.message}<br>`;
                 outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
             })
             .catch(error => {
-                outputDiv.innerHTML += `Ошибка: ${error}<br>`;
+                //outputDiv.innerHTML += `Ошибка: ${error}<br>`;
                 outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
             });
         });
@@ -109,11 +132,40 @@
             })
             .then(response => response.json())
             .then(data => {
-                outputDiv.innerHTML += `Ответ от сервера: ${data.message}<br>`;
+                //outputDiv.innerHTML += `Ответ от дрочильни: ${data.message}<br>`;
                 outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
             })
             .catch(error => {
-                outputDiv.innerHTML += `Ошибка: ${error}<br>`;
+                //outputDiv.innerHTML += `Ошибка: ${error}<br>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
+            });
+        })
+
+        const logOutput = document.getElementById('consoleOutput');
+        const outputDiv = document.getElementById('output');
+        const eventSource = new EventSource('https://toki-stresser.serveo.net/logs');
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            outputDiv.textContent = data.logs.join('\n');
+            logOutput.textContent = data.errors.join('\n');
+            logOutput.scrollTop = logOutput.scrollHeight;
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        };
+
+        eventSource.onerror = () => {
+            console.error('Ошибка подключения к серверу');
+            eventSource.close();
+        };
+        document.getElementById('clearButton').addEventListener('click', function() {
+            fetch('/clear', {
+                method: 'GET'
+            }).then(response => response.json())
+            .then(data => {
+                //outputDiv.innerHTML += `Ответ от дрочильни: ${data.message}<br>`;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
+            })
+            .catch(error => {
+                //outputDiv.innerHTML += `Ошибка: ${error}<br>`;
                 outputDiv.scrollTop = outputDiv.scrollHeight; // Прокрутка к последнему сообщению
             });
         })

