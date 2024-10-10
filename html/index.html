@@ -69,7 +69,6 @@
 </head>
 <body>
     <div class="container">
-		<h1 id='URL'>URL</h1>
         <h1>Залупа Стрессер</h1>
 		<h1>8=====D</h1>
         <label for="targetURL">Схватить URL за яйца:</label>
@@ -93,7 +92,6 @@
     </div>
 
     <script>
-	document.getElementById('URL').innerHTML = window.location.href+'logs';
         document.getElementById('startButton').addEventListener('click', function() {
             const targetURL = document.getElementById('targetURL').value;
             const attackTime = document.getElementById('attackTime').value;
@@ -145,7 +143,7 @@
 
         const logOutput = document.getElementById('consoleOutput');
         const outputDiv = document.getElementById('output');
-        const eventSource = new EventSource(window.location.href+'/logs');
+        const eventSource = new EventSource(window.location.href+'logs');
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
             outputDiv.textContent = data.logs.join('\n');
